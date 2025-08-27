@@ -1,0 +1,41 @@
+name: Build & Push PHaR Docker
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master, main ]
+
+env:
+  IMAGE_NAME: phar
+  REGISTRY: ghcr.io
+  ORG: ${{ github.repository_owner }}
+  TAG: torch1.8.0-cu111
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Login GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+      - name: Build
+        run: |
+          docker build \
+            --build-arg PYTORCH=1.8.0 \
+            --build-arg CUDA=11.1 \
+            --build-arg CUDNN=8 \
+            -f docker/Dockerfile \
+            -t ghcr.io/${{ env.ORG }}/${{ env.IMAGE_NAME }}:${{ env.TAG }} .
+      - name: Push
+        run: |
+          docker push ghcr.io/${{ env.ORG }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
