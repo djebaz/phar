@@ -1,0 +1,28 @@
+name: Retag existing digest as runpod
+
+on:
+  workflow_dispatch:
+    inputs:
+      digest:
+        description: 'Digest SHA256 à retagger (sans le sha256:)'
+        required: true
+
+jobs:
+  retag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup buildx (pour imagetools)
+        uses: docker/setup-buildx-action@v3
+
+      - name: Retag digest -> runpod (server-side)
+        run: |
+          docker buildx imagetools create \
+            -t ghcr.io/${{ github.repository_owner }}/phar:runpod \
+            ghcr.io/${{ github.repository_owner }}/phar@sha256:${{ github.event.inputs.digest }}
