@@ -144,7 +144,7 @@ torchvision==0.11.1+cu113
 tqdm==4.60.0
 trimesh==3.10.0
 typing-extensions==3.10.0.0
-urllib3==1.26.4
+urllib3==2.5.0
 vidaug==0.1
 virtualenv==20.13.0
 webcolors==1.11.1
