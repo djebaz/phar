@@ -1,14 +1,12 @@
-name: Build Runpod Wrapper
+name: Build & Push Runpod Image
 
 on:
   workflow_dispatch:
-
-env:
-  REGISTRY: ghcr.io
-  ORG: ${{ github.repository_owner }}
-  IMAGE_BASE: phar
-  IMAGE_TAG_BASE: torch1.8.0-cu111
-  IMAGE_TAG_RUNPOD: runpod
+  push:
+    branches: [ master ]
+    paths:
+      - 'docker/runpod.Dockerfile'
+      - '.github/workflows/docker-runpod.yml'
 
 jobs:
   build:
@@ -16,16 +14,40 @@ jobs:
     permissions:
       contents: read
       packages: write
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/login-action@v3
+      # 1) Libère de l'espace disque (Android, .NET, Haskell, docker cache…)
+      - name: Free disk space
+        uses: easimon/maximize-build-space@v10
+        with:
+          root-reserve-mb: 5120
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          build-mount-path: '/var/lib/docker'
+
+      # 2) Checkout léger (pas de submodules)
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: false
+
+      # 3) Login GHCR
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.CR_PAT }}
-      - name: Build wrapper
-        run: |
-          docker build -f docker/runpod.Dockerfile \
-            -t ghcr.io/${{ env.ORG }}/${{ env.IMAGE_BASE }}:${{ env.IMAGE_TAG_RUNPOD }} .
-      - name: Push
-        run: docker push ghcr.io/${{ env.ORG }}/${{ env.IMAGE_BASE }}:${{ env.IMAGE_TAG_RUNPOD }}
+
+      # 4) Build & Push l'image wrapper (ENTRYPOINT bash -lc; CMD sleep infinity)
+      - name: Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/runpod.Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/phar:runpod
+          pull: true
+          no-cache: true
