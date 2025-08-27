@@ -6,7 +6,7 @@ attrs==21.4.0
 audioread==2.1.9
 autopep8==1.6.0
 beautifulsoup4==4.9.3
-certifi==2020.12.5
+certifi==2025.8.3
 cffi==1.15.0
 cfgv==3.3.1
 chardet==4.0.0
