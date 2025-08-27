@@ -1,0 +1,31 @@
+name: Build Runpod Wrapper
+
+on:
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  ORG: ${{ github.repository_owner }}
+  IMAGE_BASE: phar
+  IMAGE_TAG_BASE: torch1.8.0-cu111
+  IMAGE_TAG_RUNPOD: runpod
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+      - name: Build wrapper
+        run: |
+          docker build -f docker/runpod.Dockerfile \
+            -t ghcr.io/${{ env.ORG }}/${{ env.IMAGE_BASE }}:${{ env.IMAGE_TAG_RUNPOD }} .
+      - name: Push
+        run: docker push ghcr.io/${{ env.ORG }}/${{ env.IMAGE_BASE }}:${{ env.IMAGE_TAG_RUNPOD }}
