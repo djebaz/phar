@@ -58,7 +58,7 @@ lws==1.2.7
 Mako==1.1.4
 Markdown==3.3.6
 MarkupSafe==2.0.0
-matplotlib==3.4.2
+matplotlib==3.9.4
 mccabe==0.6.1
 mlflow==1.17.0
 -e git+ssh://git@github.com/open-mmlab/mmaction2.git@255bbc08634c21e6400af7b9d1a470b52285ebcd#egg=mmaction2
