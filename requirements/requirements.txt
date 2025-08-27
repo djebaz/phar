@@ -13,7 +13,7 @@ chardet==4.0.0
 chumpy==0.70
 click==7.1.2
 cloudpickle==1.6.0
-colorama==0.4.4
+colorama==0.4.6
 commonmark==0.9.1
 coverage==6.3.1
 cycler==0.10.0
