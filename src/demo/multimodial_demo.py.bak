@@ -23,19 +23,8 @@ from mmaction.core.evaluation import get_weighted_score
 from rich.console import Console
 from tqdm import tqdm
 def _prepare_audio_input(x):
-    """
-    Prépare les features audio pour inference_recognizer.
-    - Si x est un fichier .npy -> np.load
-    - Si x est un dossier (ex: ts00_0_7.npy/) -> on charge tous les .npy dedans et on les empile
-    """
-    if isinstance(x, str) and os.path.isdir(x):
-        # Charger tous les .npy du dossier
-        npy_files = sorted([f for f in os.listdir(x) if f.endswith(".npy")])
-        if not npy_files:
-            raise FileNotFoundError(f"Aucun .npy trouvé dans {x}")
-        loaded = [np.load(os.path.join(x, f)) for f in npy_files]
-        arr = np.stack(loaded, axis=0)  # [N, T, F]
-    elif isinstance(x, str):
+    """Prépare une entrée audio pour inference_recognizer."""
+    if isinstance(x, str):
         arr = np.load(x)
     elif isinstance(x, (list, tuple)):
         loaded = []
@@ -51,8 +40,14 @@ def _prepare_audio_input(x):
     if arr.dtype != np.float32:
         arr = arr.astype(np.float32)
 
-    return arr
+    if arr.ndim == 2:      # [T, F]
+        pass
+    elif arr.ndim == 3:    # [N, T, F]
+        pass
+    else:
+        raise ValueError(f"Forme audio inattendue: {arr.shape}")
 
+    return arr
 
 try:
     from mmdet.apis import inference_detector, init_detector
@@ -341,7 +336,7 @@ def skeleton_inference(clip: str, args: dict):
                 img_shape=(h, w),
                 original_shape=(h, w),
                 start_index=0,
-               modality='Pose',
+                modality='Pose',
                 total_frames=num_frame)
     num_person = max([len(x) for x in pose_results])
     keypoint = np.zeros((num_person, num_frame, num_keypoint, 2),
@@ -407,12 +402,11 @@ def audio_inference(clip: str, coeffs: list):
                       style='yellow')
         PREDS[clip]['audio'] = placeholder
         return
-    out_feature = f'{osp.splitext(out_audio)[0]}.npy'
 
+    out_feature = f'{osp.splitext(out_audio)[0]}.npy'
     subprocess.run(
-        ['python', AUDIO_FEATURE_SCRIPT, out_audio, out_feature],
-        check=True
-    )
+        ['python', AUDIO_FEATURE_SCRIPT, TEMP, TEMP, '--ext', 'wav'],
+        capture_output=True)
 
     features = _prepare_audio_input(out_feature)
     print(f"[audio] type={type(features)}, shape={getattr(features, 'shape', None)}")
@@ -595,8 +589,8 @@ def main():
         LOUD_WEIGHT = sum(loud_weights.values()) / len(loud_weights)
 
         CONSOLE.print('Performing audio inference...', style='bold green')
-        #for clip in tqdm(PREDS):
-            #audio_inference(clip, args.coefficients)
+        for clip in tqdm(PREDS):
+            audio_inference(clip, args.coefficients)
         verbose_print(
             f'Finished in {round((time.time() - start_time) / 60, 2)} min',
             style='green')

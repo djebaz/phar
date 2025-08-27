@@ -1,0 +1,46 @@
+--- a/src/demo/multimodial_demo.bak.py
++++ b/src/demo/multimodial_demo.bak.py
+@@
+ import argparse
+ import os
+ import sys
++import numpy as np
+@@
+ from mmaction.apis import inference_recognizer
++
++
++def _prepare_audio_input(x):
++    """Prépare une entrée audio pour inference_recognizer."""
++    if isinstance(x, str):
++        arr = np.load(x)
++    elif isinstance(x, (list, tuple)):
++        loaded = []
++        for xi in x:
++            if isinstance(xi, str):
++                loaded.append(np.load(xi))
++            else:
++                loaded.append(np.asarray(xi))
++        arr = np.stack(loaded, axis=0)
++    else:
++        arr = np.asarray(x)
++
++    if arr.dtype != np.float32:
++        arr = arr.astype(np.float32)
++
++    if arr.ndim == 2:      # [T, F]
++        pass
++    elif arr.ndim == 3:    # [N, T, F]
++        pass
++    else:
++        raise ValueError(f"Forme audio inattendue: {arr.shape}")
++
++    return arr
+@@
+ def audio_inference(clip, coefficients):
+     print("Performing audio inference...")
+-    results = inference_recognizer(AUDIO_MODEL, out_feature)
+-    print("Audio inference results:", results)
++    features = _prepare_audio_input(out_feature)
++    print(f"[audio] type={type(features)}, shape={getattr(features,'shape',None)}")
++    results = inference_recognizer(AUDIO_MODEL, features)
++    print("Audio inference results:", results)

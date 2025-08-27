@@ -1,0 +1,35 @@
+--- a/src/demo/multimodial_demo.py
++++ b/src/demo/multimodial_demo.py
+@@
+ import argparse
+ import os
+ import sys
++import numpy as np
+ 
+ from mmaction.apis import inference_recognizer
+ 
++
++def _prepare_audio_input(x):
++    """
++    Prépare une entrée audio pour inference_recognizer.
++    Accepte :
++      - str : chemin vers un fichier .npy
++      - list/tuple : liste de chemins .npy ou d'arrays
++      - ndarray déjà prêt
++    Retourne un np.ndarray float32 de shape [T, F] ou [N, T, F].
++    """
++    if isinstance(x, str):
++        arr = np.load(x)
++    elif isinstance(x, (list, tuple)):
++        loaded = []
++        for xi in x:
++            if isinstance(xi, str):
++                loaded.append(np.load(xi))
++            else:
++                loaded.append(np.asarray(xi))
++        arr = np.stack(loaded, axis=0)
++    else:
++        arr = np.asarray(x)
++
++    if arr.dtype != np.float32:
++        
