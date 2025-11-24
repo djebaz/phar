@@ -28,7 +28,7 @@ jobs:
 
       # 2) Checkout léger (pas de submodules)
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 1
           submodules: false
